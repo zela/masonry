@@ -2,13 +2,25 @@
   "name": "spa-masonry-vercel",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "format": "prettier --write .",
+    "lint": "eslint --fix .",
+    "test": "",
+    "typecheck": "react-router typegen && tsc",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --quiet --fix"
+    ],
+    "**/*.{json,js,ts,jsx,tsx,html}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
     "@react-router/node": "^7.1.5",
     "isbot": "^5.1.17",
     "react": "^19.0.0",
@@ -16,14 +28,19 @@
     "react-router": "^7.1.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.24.0",
     "@react-router/dev": "^7.1.5",
-    "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^20",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
     "@vercel/node": "^5.1.2",
     "@vercel/react-router": "^1.0.2",
-    "tailwindcss": "^4.0.0",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "10.1.1",
+    "eslint-plugin-react": "^7.37.5",
+    "git-format-staged": "^3.1.1",
+    "husky": "^9.1.7",
+    "prettier": "3.5.3",
     "typescript": "^5.7.2",
     "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.4"
