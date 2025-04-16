@@ -10,11 +10,7 @@ import type { Route } from "../+types/root";
 
 const containerStyles = css`
   margin: 0 auto;
-  padding: 2rem 1rem;
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
+  padding: 1rem;
 `;
 
 const title = "Masonry Photo Gallery";
@@ -73,7 +69,11 @@ export default function Home() {
   return (
     <div css={containerStyles}>
       <HomeHeader title={title} description={description} />
-      <PhotoGrid photos={photos} />
+      <PhotoGrid
+        photos={photos}
+        loadMore={loadPhotos}
+        hasMore={hasMore}
+      />
     </div>
   );
 }
