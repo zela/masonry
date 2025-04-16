@@ -10,46 +10,20 @@ interface PhotoGridProps {
   hasMore?: boolean;
 }
 
-const getGridContainerStyles = (columnCount: number) => css`
-  max-width: 90rem;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(${columnCount}, minmax(min(18rem, 100%), 1fr));
-  gap: 1rem;
-`;
-
-const columnStyles = css`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const itemStyles = css`
-  break-inside: avoid;
-
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0.5rem;
-  }
-`;
-
-export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
+/**
+ * Column calculation hook:
+ * 1. Observes container width changes using ResizeObserver
+ * 2. Calculates optimal column count based on:
+ *    - Minimum column width of 18rem
+ *    - Maximum of 4 columns
+ *    - Responsive fallback to 1 column on narrow screens
+ * 3. Updates columnCount state to trigger layout reflow
+ * 4. Performs initial calculation on mount
+ * 5. Cleans up observer on unmount to prevent memory leaks
+ */
+function useResponsiveColumns(containerRef: React.RefObject<HTMLDivElement>) {
   const [columnCount, setColumnCount] = useState(1);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  /**
-   * Column Calculation Effect:
-   * 1. Observes container width changes using ResizeObserver
-   * 2. Calculates optimal column count based on:
-   *    - Minimum column width of 18rem
-   *    - Maximum of 4 columns
-   *    - Responsive fallback to 1 column on narrow screens
-   * 3. Updates columnCount state to trigger layout reflow
-   */
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -71,10 +45,88 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
     });
 
     observer.observe(containerRef.current);
+    setColumnCount(calculateColumns()); // Initial calculation
+
     return () => observer.disconnect();
   }, []);
 
-  // Optimized column distribution
+  return columnCount;
+}
+
+/**
+ * Hook for the infinite scroll:
+ * 1. Sets up IntersectionObserver to watch sentinel element
+ * 2. Triggers callback when sentinel becomes visible in viewport
+ * 3. Uses 200px root margin for early loading before reaching bottom
+ * 4. Skips setup when callback is missing or no more content is available
+ * 5. Properly cleans up observer references on unmount or dependency changes
+ * 6. Maintains reference stability to prevent unnecessary re-renders
+ */
+function useInfiniteScroll(callback?: () => void, hasMore?: boolean) {
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!callback || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          callback();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    const currentRef = sentinelRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+      observer.disconnect();
+    };
+  }, [callback, hasMore]);
+
+  return sentinelRef;
+}
+
+const getGridContainerStyles = (columnCount: number) => css`
+  display: grid;
+  grid-template-columns: repeat(${columnCount}, minmax(min(18rem, 100%), 1fr));
+  gap: 1rem;
+  max-width: 90rem;
+  margin: 0 auto;
+`;
+
+const columnStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const itemStyles = css`
+  break-inside: avoid;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+  }
+`;
+
+export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const columnCount = useResponsiveColumns(
+    containerRef as React.RefObject<HTMLDivElement>
+  );
+  const sentinelRef = useInfiniteScroll(loadMore, hasMore);
+
+  // Distribute photos into columns
   const columns = useMemo(() => {
     const cols = Array.from({ length: columnCount }, () => [] as PexelsPhoto[]);
     photos.forEach((photo, index) => {
@@ -82,33 +134,6 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
     });
     return cols;
   }, [photos, columnCount]);
-
-  /**
-   * Infinite Scroll Effect:
-   * 1. Sets up IntersectionObserver to watch sentinel element
-   * 2. Triggers loadMore callback when sentinel becomes visible
-   * 3. Uses 200px root margin for early loading before reaching bottom
-   * 4. Automatically cleans up observer on unmount
-   */
-  useEffect(() => {
-    if (!loadMore || !hasMore) return;
-    const observer = new window.IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
-      },
-      { rootMargin: "200px" }
-    );
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
-    }
-    return () => {
-      if (sentinelRef.current) {
-        observer.unobserve(sentinelRef.current);
-      }
-    };
-  }, [loadMore, hasMore]);
 
   return (
     <>
