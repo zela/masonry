@@ -1,3 +1,4 @@
+import { useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 
@@ -8,10 +9,7 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-  return { message: "Hello from Vercel" };
-}
-
-export default function Home({ loaderData }: Route.ComponentProps) {
+export default function Home() {
+  const loaderData = useRouteLoaderData("root") as { message: string };
   return <Welcome message={loaderData.message} />;
 }
