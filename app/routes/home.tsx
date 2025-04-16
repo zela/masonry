@@ -1,15 +1,79 @@
-import { useRouteLoaderData } from "react-router";
-import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+/** @jsxImportSource @emotion/react */
 
+import { css } from "@emotion/react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { fetchPhotos } from "~/api/pexels";
+import type { PexelsPhoto } from "~/api/pexels";
+import { HomeHeader } from "~/components/HomeHeader";
+import { PhotoGrid } from "~/components/PhotoGrid";
+import type { Route } from "../+types/root";
+
+const containerStyles = css`
+  margin: 0 auto;
+  padding: 1rem;
+`;
+
+const title = "Masonry Photo Gallery";
+const description = "Displaying photos sourced from the Pexels API";
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title },
+    {
+      name: "description",
+      content: description,
+    },
   ];
 }
 
 export default function Home() {
-  const loaderData = useRouteLoaderData("root") as { message: string };
-  return <Welcome message={loaderData.message} />;
+  const [photos, setPhotos] = useState<PexelsPhoto[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const loadingRef = useRef(false);
+
+  const loadPhotos = useCallback(
+    async (reset = false) => {
+      if (loadingRef.current) return;
+
+      try {
+        loadingRef.current = true;
+        setIsLoading(true);
+
+        const currentPage = reset ? 1 : page;
+        const response = await fetchPhotos(currentPage, 80);
+
+        setPhotos((prev) => {
+          if (reset) return response.photos;
+          return [...prev, ...response.photos];
+        });
+
+        setPage(currentPage + 1);
+        setHasMore(!!response.next_page);
+      } catch (error) {
+        console.error("Error loading photos:", error);
+      } finally {
+        setIsLoading(false);
+        loadingRef.current = false;
+      }
+    },
+    [page]
+  );
+
+  // Load initial photos
+  useEffect(() => {
+    setPage(1);
+    loadPhotos(true);
+  }, []);
+
+  return (
+    <div css={containerStyles}>
+      <HomeHeader title={title} description={description} />
+      <PhotoGrid
+        photos={photos}
+        loadMore={loadPhotos}
+        hasMore={hasMore}
+      />
+    </div>
+  );
 }

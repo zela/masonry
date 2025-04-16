@@ -1,6 +1,16 @@
-html,
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  margin: 0;
+  font-family:
+    Rockwell,
+    Rockwell Nova,
+    Roboto Slab,
+    DejaVu Serif,
+    Sitka Small,
+    serif;
 }
