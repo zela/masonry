@@ -14,7 +14,7 @@ const getGridContainerStyles = (columnCount: number) => css`
   max-width: 90rem;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(${columnCount}, minmax(18rem, 1fr));
+  grid-template-columns: repeat(${columnCount}, minmax(min(18rem, 100%), 1fr));
   gap: 1rem;
 `;
 
@@ -37,7 +37,7 @@ const itemStyles = css`
 `;
 
 export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
-  const [columnCount, setColumnCount] = useState(2);
+  const [columnCount, setColumnCount] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,25 +60,27 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
       );
       const maxColumns = Math.min(
         4,
-        // (containerWidth - 16) is the minimal container padding
+        // 16 here is the minimal container padding
         Math.floor((containerWidth - 16) / (18 * remSize))
       );
       return Math.max(1, maxColumns);
     };
 
     const observer = new ResizeObserver(() => {
-      setColumnCount(calculateColumns());
+      requestAnimationFrame(() => setColumnCount(calculateColumns()));
     });
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // Distribute photos into columns
+  // Optimized column distribution
   const columns = useMemo(() => {
-    return Array.from({ length: columnCount }, (_, i) =>
-      photos.filter((_, index) => index % columnCount === i)
-    );
+    const cols = Array.from({ length: columnCount }, () => [] as PexelsPhoto[]);
+    photos.forEach((photo, index) => {
+      cols[index % columnCount].push(photo);
+    });
+    return cols;
   }, [photos, columnCount]);
 
   /**
@@ -118,7 +120,7 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
                 <img
                   src={photo.src.medium}
                   srcSet={`${photo.src.medium} 200w, ${photo.src.large} 433w, ${photo.src.large2x} 940w`}
-                  sizes="18rem"
+                  sizes="(max-width: 320px) 18rem, (min-width: 1480px) 22rem, 25rem"
                   alt={photo.alt || `Photo by ${photo.photographer}`}
                   loading="lazy"
                   width={photo.width}

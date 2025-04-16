@@ -14,7 +14,7 @@ const containerStyles = css`
 `;
 
 const title = "Masonry Photo Gallery";
-const description = "A responsive, virtualized masonry grid photo gallery";
+const description = "Displaying photos sourced from the Pexels API";
 export function meta({}: Route.MetaArgs) {
   return [
     { title },
