@@ -14,5 +14,5 @@ export default tseslint.config(
     },
   },
   eslintConfigPrettier,
-  { ignores: ["build/*"] }
+  { ignores: ["build/*"] },
 );

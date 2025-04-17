@@ -6,5 +6,7 @@ export default defineConfig(({ command }) => ({
   ssr: {
     noExternal: command === "build" ? true : undefined,
   },
-  plugins: [!process.env.VITEST && reactRouter(), tsconfigPaths()].filter(Boolean),
+  plugins: [!process.env.VITEST && reactRouter(), tsconfigPaths()].filter(
+    Boolean,
+  ),
 }));

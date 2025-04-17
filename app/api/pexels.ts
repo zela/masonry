@@ -59,7 +59,7 @@ async function fetchLocalPhotos(): Promise<PexelsResponse> {
 async function fetchPhotosFromPexels(
   page = 1,
   perPage = 80,
-  query?: string
+  query?: string,
 ): Promise<PexelsResponse> {
   const endpoint = query
     ? `${PEXELS_BASE_URL}/search?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`
@@ -73,7 +73,7 @@ async function fetchPhotosFromPexels(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch photos: ${response.status} ${response.statusText}`
+      `Failed to fetch photos: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -91,7 +91,7 @@ async function fetchPhotosFromPexels(
 export async function fetchPhotos(
   page = 1,
   perPage = 80,
-  query?: string
+  query?: string,
 ): Promise<PexelsResponse> {
   if (import.meta.env.DEV) {
     return fetchLocalPhotos();

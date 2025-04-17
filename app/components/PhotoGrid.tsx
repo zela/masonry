@@ -30,12 +30,12 @@ function useResponsiveColumns(containerRef: React.RefObject<HTMLDivElement>) {
     const calculateColumns = () => {
       const containerWidth = containerRef.current?.offsetWidth || 0;
       const remSize = parseFloat(
-        getComputedStyle(document.documentElement).fontSize
+        getComputedStyle(document.documentElement).fontSize,
       );
       const maxColumns = Math.min(
         4,
         // 16 here is the minimal container padding
-        Math.floor((containerWidth - 16) / (18 * remSize))
+        Math.floor((containerWidth - 16) / (18 * remSize)),
       );
       return Math.max(1, maxColumns);
     };
@@ -74,7 +74,7 @@ function useInfiniteScroll(callback?: () => void, hasMore?: boolean) {
           callback();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     const currentRef = sentinelRef.current;
@@ -134,13 +134,13 @@ const itemStyles = css`
  */
 function distributePhotosGreedy(
   photos: PexelsPhoto[],
-  columnCount: number
+  columnCount: number,
 ): PexelsPhoto[][] {
   // Create array of column arrays with their total height
   const columnHeights = Array(columnCount).fill(0);
   const columns = Array.from(
     { length: columnCount },
-    () => [] as PexelsPhoto[]
+    () => [] as PexelsPhoto[],
   );
 
   // Greedy distribution
@@ -149,7 +149,7 @@ function distributePhotosGreedy(
     const shortestColumnIndex = columnHeights.reduce(
       (minIndex, height, index) =>
         height < columnHeights[minIndex] ? index : minIndex,
-      0
+      0,
     );
 
     columns[shortestColumnIndex].push(photo);
@@ -162,14 +162,14 @@ function distributePhotosGreedy(
 export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const columnCount = useResponsiveColumns(
-    containerRef as React.RefObject<HTMLDivElement>
+    containerRef as React.RefObject<HTMLDivElement>,
   );
   const sentinelRef = useInfiniteScroll(loadMore, hasMore);
 
   // Distribute photos into columns
   const columns = useMemo(
     () => distributePhotosGreedy(photos, columnCount),
-    [photos, columnCount]
+    [photos, columnCount],
   );
 
   return (

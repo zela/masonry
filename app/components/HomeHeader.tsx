@@ -26,4 +26,4 @@ export function HomeHeader({
       <p>{description}</p>
     </header>
   );
-};
+}
