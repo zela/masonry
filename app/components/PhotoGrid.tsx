@@ -3,7 +3,7 @@
 import { css } from "@emotion/react";
 import type { PexelsPhoto } from "~/api/pexels";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Link } from "react-router";
+import PhotoItem from "./PhotoItem";
 
 interface PhotoGridProps {
   photos: PexelsPhoto[];
@@ -132,20 +132,6 @@ const columnStyles = css`
   gap: 1rem;
 `;
 
-const itemStyles = css`
-  break-inside: avoid;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 18rem;
-
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0.5rem;
-  }
-`;
-
 /**
  * Distributes photos across columns using a greedy algorithm to balance column heights
  *
@@ -202,37 +188,17 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
         {columns.map((columnPhotos, columnIndex) => (
           <div key={columnIndex} css={columnStyles}>
             {(columnPhotos as PexelsPhoto[]).map((photo, index) => {
-              const isSuperPriorityImage = index === 0; // First image in each column
-              const isPriorityImage = index < 2; // First 2 images in each column
-              const aspectRatio = photo.width / photo.height;
-              const maxColWidth = 18 * 16; // 18rem = 288px
-              const sizes = [
-                // 2x density covers 95%+ of high-density devices
-                `${Math.round(maxColWidth * 2)}w`, // 576w
-                `${Math.round(maxColWidth)}w`, // 288w
-              ];
+              const isSuperPriorityImage = index === 0;
+              const isPriorityImage = index < 2;
 
               return (
-                <Link key={photo.id} to={`/photos/${photo.id}`}>
-                  <div css={itemStyles}>
-                    <img
-                      src={photo.src.medium}
-                      srcSet={
-                        `${photo.src.medium} ${sizes[1]}, ` +
-                        `${photo.src.large} ${sizes[0]}`
-                      }
-                      sizes={`(max-width: 90rem) calc((100vw - 1rem * ${columnCount - 1}) / ${columnCount}), ${maxColWidth}px`}
-                      alt={photo.alt || `Photo by ${photo.photographer}`}
-                      fetchPriority={isSuperPriorityImage ? "high" : "auto"}
-                      loading={isPriorityImage ? "eager" : "lazy"}
-                      width={photo.width}
-                      height={photo.height}
-                      style={{
-                        aspectRatio: aspectRatio,
-                      }}
-                    />
-                  </div>
-                </Link>
+                <PhotoItem
+                  key={photo.id} // Key should be here ideally, or on the outer element if Link is removed
+                  photo={photo}
+                  columnCount={columnCount}
+                  isSuperPriorityImage={isSuperPriorityImage}
+                  isPriorityImage={isPriorityImage}
+                />
               );
             })}
           </div>
