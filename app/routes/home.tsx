@@ -1,21 +1,22 @@
 /** @jsxImportSource @emotion/react */
 
 import { css } from "@emotion/react";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { fetchPhotos } from "~/api/pexels";
 import type { PexelsPhoto } from "~/api/pexels";
 import { HomeHeader } from "~/components/HomeHeader";
 import { PhotoGrid } from "~/components/PhotoGrid";
-import type { Route } from "../+types/root";
+import { DelayedSpinner } from "~/components/Spinner";
 
 const containerStyles = css`
   margin: 0 auto;
   padding: 1rem;
+  text-align: center;
 `;
 
 const title = "Masonry Photo Gallery";
 const description = "Displaying photos sourced from the Pexels API";
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title },
     {
@@ -28,6 +29,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const [photos, setPhotos] = useState<PexelsPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const loadingRef = useRef(false);
@@ -39,6 +41,7 @@ export default function Home() {
       try {
         loadingRef.current = true;
         setIsLoading(true);
+        setError(null);
 
         const currentPage = reset ? 1 : page;
         const response = await fetchPhotos(currentPage, 80);
@@ -52,28 +55,23 @@ export default function Home() {
         setHasMore(!!response.next_page);
       } catch (error) {
         console.error("Error loading photos:", error);
+        setError(`Error loading photos: ${error}`);
       } finally {
         setIsLoading(false);
         loadingRef.current = false;
       }
     },
-    [page]
+    [page],
   );
-
-  // Load initial photos
-  useEffect(() => {
-    setPage(1);
-    loadPhotos(true);
-  }, []);
 
   return (
     <div css={containerStyles}>
       <HomeHeader title={title} description={description} />
-      <PhotoGrid
-        photos={photos}
-        loadMore={loadPhotos}
-        hasMore={hasMore}
-      />
+      {error && <p>Error: {error}</p>}
+      {photos && (
+        <PhotoGrid photos={photos} loadMore={loadPhotos} hasMore={hasMore} />
+      )}
+      {isLoading && <DelayedSpinner />}
     </div>
   );
 }
