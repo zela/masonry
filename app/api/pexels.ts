@@ -68,11 +68,8 @@ async function fetchLocalPhotoById(): Promise<PexelsPhoto> {
 async function fetchPhotosFromPexels(
   page = 1,
   perPage = 80,
-  query?: string,
 ): Promise<PexelsResponse> {
-  const endpoint = query
-    ? `${PEXELS_BASE_URL}/search?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`
-    : `${PEXELS_BASE_URL}/curated?page=${page}&per_page=${perPage}`;
+  const endpoint = `${PEXELS_BASE_URL}/curated?page=${page}&per_page=${perPage}`;
 
   const response = await fetch(endpoint, {
     headers: {
@@ -94,18 +91,16 @@ async function fetchPhotosFromPexels(
  * In development mode, arguments are ignored for simplicity.
  * @param {number} [page=1] - Page number
  * @param {number} [perPage=80] - Number of photos per page
- * @param {string} [query] - Search query
  * @returns {Promise<PexelsResponse>} A promise that resolves to the Pexels API response
  */
 export async function fetchPhotos(
   page = 1,
   perPage = 80,
-  query?: string,
 ): Promise<PexelsResponse> {
   if (import.meta.env.DEV) {
     return fetchLocalPhotos();
   }
-  return fetchPhotosFromPexels(page, perPage, query);
+  return fetchPhotosFromPexels(page, perPage);
 }
 
 /**
