@@ -6,7 +6,7 @@ import { css } from "@emotion/react";
 import { Link } from "react-router";
 import { fetchPhotoById } from "~/api/pexels";
 import type { PexelsPhoto } from "~/api/pexels";
-import { PhotoDetail } from "~/components/PhotoDetail";
+import { PhotoDetails } from "~/components/PhotoDetails";
 import { DelayedSpinner } from "~/components/Spinner";
 import type { Route } from "../+types/root";
 
@@ -84,5 +84,5 @@ export default function PhotoDetailPage() {
     return <Error message="Photo not found." />;
   }
 
-  return <PhotoDetail photo={photo} />;
+  return <PhotoDetails photo={photo} />;
 }
