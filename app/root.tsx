@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { DelayedSpinner } from "./components/Spinner";
 import type { Route } from "./+types/root";
 
 const globalStyles = css`
@@ -55,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export function HydrateFallback() {
-  return <div />;
+  return <DelayedSpinner />;
 }
 
 export default function App() {
