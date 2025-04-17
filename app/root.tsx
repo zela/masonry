@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export function HydrateFallback() {
-  return <DelayedSpinner />;
+  return <DelayedSpinner fullPage={true} />;
 }
 
 export default function App() {
