@@ -15,12 +15,6 @@
     "typecheck": "react-router typegen && tsc",
     "visualize": "vite-bundle-visualizer"
   },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --quiet --fix"
-    ],
-    "**/*.{json,js,ts,jsx,tsx,html}": "prettier --write --ignore-unknown"
-  },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@react-router/node": "^7.1.5",
