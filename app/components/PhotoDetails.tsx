@@ -118,8 +118,8 @@ export function PhotoDetails({ photo }: { photo: PexelsPhoto | null }) {
           css={photoStyles}
           src={photo.src.large}
           srcSet={`
-            ${photo.src.large} 430w,
-            ${photo.src.large2x} 860w
+            ${photo.src.large} 500w,
+            ${photo.src.large2x} 1000w
           `}
           sizes="(max-width: 60rem) calc(100vw - 2rem), 58rem"
           alt={photo.alt || `Photo by ${photo.photographer}`}
