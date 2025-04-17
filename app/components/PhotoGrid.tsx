@@ -140,19 +140,38 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
       <div css={getGridContainerStyles(columnCount)} ref={containerRef}>
         {columns.map((columnPhotos, columnIndex) => (
           <div key={columnIndex} css={columnStyles}>
-            {columnPhotos.map((photo) => (
-              <div key={photo.id} css={itemStyles}>
-                <img
-                  src={photo.src.medium}
-                  srcSet={`${photo.src.medium} 200w, ${photo.src.large} 433w, ${photo.src.large2x} 940w`}
-                  sizes="(max-width: 320px) 18rem, (min-width: 1480px) 22rem, 25rem"
-                  alt={photo.alt || `Photo by ${photo.photographer}`}
-                  loading="lazy"
-                  width={photo.width}
-                  height={photo.height}
-                />
-              </div>
-            ))}
+            {columnPhotos.map((photo, index) => {
+              const isSuperPriorityImage = index === 0; // First image in each column
+              const isPriorityImage = index < 2; // First 2 images in each column
+              const aspectRatio = photo.width / photo.height;
+              const maxColWidth = 18 * 16; // 18rem = 288px
+              const sizes = [
+                // 2x density covers 95%+ of high-density devices
+                `${Math.round(maxColWidth * 2)}w`, // 576w
+                `${Math.round(maxColWidth)}w`, // 288w
+              ];
+
+              return (
+                <div key={photo.id} css={itemStyles}>
+                  <img
+                    src={photo.src.medium}
+                    srcSet={
+                      `${photo.src.medium} ${sizes[1]}, ` +
+                      `${photo.src.large} ${sizes[0]}`
+                    }
+                    sizes={`(max-width: 90rem) calc((100vw - 1rem * ${columnCount - 1}) / ${columnCount}), ${maxColWidth}px`}
+                    alt={photo.alt || `Photo by ${photo.photographer}`}
+                    fetchPriority={isSuperPriorityImage ? "high" : "auto"}
+                    loading={isPriorityImage ? "eager" : "lazy"}
+                    width={photo.width}
+                    height={photo.height}
+                    style={{
+                      aspectRatio: aspectRatio,
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
