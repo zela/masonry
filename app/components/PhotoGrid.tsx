@@ -120,33 +120,6 @@ const itemStyles = css`
 `;
 
 /**
- * Simple photo distribution across columns
- * Left it here for the sake of comparison
- *
- * @param photos - Array of photos to distribute
- * @param columnCount - Number of columns to distribute photos into
- * @returns Array of column arrays, where each column array contains the photos for that column
- *
- * Algorithm:
- * 1. Creates array of empty column arrays
- * 2. Distributes photos round-robin across columns
- * 3. Returns array of populated column arrays
- */
-// function distributePhotos(
-//   photos: PexelsPhoto[],
-//   columnCount: number
-// ): PexelsPhoto[][] {
-//   const columns = Array.from(
-//     { length: columnCount },
-//     () => [] as PexelsPhoto[]
-//   );
-//   photos.forEach((photo, index) => {
-//     columns[index % columnCount].push(photo);
-//   });
-//   return columns;
-// }
-
-/**
  * Distributes photos across columns using a greedy algorithm to balance column heights
  *
  * @param photos - Array of photos to distribute
