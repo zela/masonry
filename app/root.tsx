@@ -35,10 +35,6 @@ export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://api.pexels.com" },
 ];
 
-export async function loader({ context }: Route.LoaderArgs) {
-  return { message: "Hello from Vercel" };
-}
-
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
