@@ -30,12 +30,12 @@ function useResponsiveColumns(containerRef: React.RefObject<HTMLDivElement>) {
     const calculateColumns = () => {
       const containerWidth = containerRef.current?.offsetWidth || 0;
       const remSize = parseFloat(
-        getComputedStyle(document.documentElement).fontSize
+        getComputedStyle(document.documentElement).fontSize,
       );
       const maxColumns = Math.min(
         4,
         // 16 here is the minimal container padding
-        Math.floor((containerWidth - 16) / (18 * remSize))
+        Math.floor((containerWidth - 16) / (18 * remSize)),
       );
       return Math.max(1, maxColumns);
     };
@@ -74,7 +74,7 @@ function useInfiniteScroll(callback?: () => void, hasMore?: boolean) {
           callback();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     const currentRef = sentinelRef.current;
@@ -119,40 +119,96 @@ const itemStyles = css`
   }
 `;
 
+/**
+ * Distributes photos across columns using a greedy algorithm to balance column heights
+ *
+ * @param photos - Array of photos to distribute
+ * @param columnCount - Number of columns to distribute photos into
+ * @returns Array of column arrays, where each column array contains the photos for that column
+ *
+ * Algorithm:
+ * 1. Maintains running height totals for each column
+ * 2. Places each photo in the column with smallest current height
+ * 3. Updates column height after each placement
+ * 4. Results in roughly balanced column heights
+ */
+function distributePhotosGreedy(
+  photos: PexelsPhoto[],
+  columnCount: number,
+): PexelsPhoto[][] {
+  // Create array of column arrays with their total height
+  const columnHeights = Array(columnCount).fill(0);
+  const columns = Array.from(
+    { length: columnCount },
+    () => [] as PexelsPhoto[],
+  );
+
+  // Greedy distribution
+  photos.forEach((photo) => {
+    // Find column with smallest current height
+    const shortestColumnIndex = columnHeights.reduce(
+      (minIndex, height, index) =>
+        height < columnHeights[minIndex] ? index : minIndex,
+      0,
+    );
+
+    columns[shortestColumnIndex].push(photo);
+    columnHeights[shortestColumnIndex] += photo.height;
+  });
+
+  return columns;
+}
+
 export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const columnCount = useResponsiveColumns(
-    containerRef as React.RefObject<HTMLDivElement>
+    containerRef as React.RefObject<HTMLDivElement>,
   );
   const sentinelRef = useInfiniteScroll(loadMore, hasMore);
 
   // Distribute photos into columns
-  const columns = useMemo(() => {
-    const cols = Array.from({ length: columnCount }, () => [] as PexelsPhoto[]);
-    photos.forEach((photo, index) => {
-      cols[index % columnCount].push(photo);
-    });
-    return cols;
-  }, [photos, columnCount]);
+  const columns = useMemo(
+    () => distributePhotosGreedy(photos, columnCount),
+    [photos, columnCount],
+  );
 
   return (
     <>
       <div css={getGridContainerStyles(columnCount)} ref={containerRef}>
         {columns.map((columnPhotos, columnIndex) => (
           <div key={columnIndex} css={columnStyles}>
-            {columnPhotos.map((photo) => (
-              <div key={photo.id} css={itemStyles}>
-                <img
-                  src={photo.src.medium}
-                  srcSet={`${photo.src.medium} 200w, ${photo.src.large} 433w, ${photo.src.large2x} 940w`}
-                  sizes="(max-width: 320px) 18rem, (min-width: 1480px) 22rem, 25rem"
-                  alt={photo.alt || `Photo by ${photo.photographer}`}
-                  loading="lazy"
-                  width={photo.width}
-                  height={photo.height}
-                />
-              </div>
-            ))}
+            {columnPhotos.map((photo, index) => {
+              const isSuperPriorityImage = index === 0; // First image in each column
+              const isPriorityImage = index < 2; // First 2 images in each column
+              const aspectRatio = photo.width / photo.height;
+              const maxColWidth = 18 * 16; // 18rem = 288px
+              const sizes = [
+                // 2x density covers 95%+ of high-density devices
+                `${Math.round(maxColWidth * 2)}w`, // 576w
+                `${Math.round(maxColWidth)}w`, // 288w
+              ];
+
+              return (
+                <div key={photo.id} css={itemStyles}>
+                  <img
+                    src={photo.src.medium}
+                    srcSet={
+                      `${photo.src.medium} ${sizes[1]}, ` +
+                      `${photo.src.large} ${sizes[0]}`
+                    }
+                    sizes={`(max-width: 90rem) calc((100vw - 1rem * ${columnCount - 1}) / ${columnCount}), ${maxColWidth}px`}
+                    alt={photo.alt || `Photo by ${photo.photographer}`}
+                    fetchPriority={isSuperPriorityImage ? "high" : "auto"}
+                    loading={isPriorityImage ? "eager" : "lazy"}
+                    width={photo.width}
+                    height={photo.height}
+                    style={{
+                      aspectRatio: aspectRatio,
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
