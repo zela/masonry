@@ -59,23 +59,44 @@ function useResponsiveColumns(containerRef: React.RefObject<HTMLDivElement>) {
  * 1. Sets up IntersectionObserver to watch sentinel element
  * 2. Triggers callback when sentinel becomes visible in viewport
  * 3. Uses 200px root margin for early loading before reaching bottom
- * 4. Skips setup when callback is missing or no more content is available
+ * 4. Implements debouncing to prevent duplicate requests during momentum scrolling
  * 5. Properly cleans up observer references on unmount or dependency changes
  * 6. Maintains reference stability to prevent unnecessary re-renders
  */
-function useInfiniteScroll(callback?: () => void, hasMore?: boolean) {
+function useInfiniteScroll(
+  callback?: () => void | Promise<void>,
+  hasMore?: boolean,
+) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const isLoadingRef = useRef(false);
+  const timeoutRef = useRef<number>(0);
 
   useEffect(() => {
-    if (!callback || !hasMore) return;
+    if (typeof callback !== "function" || !hasMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          callback();
+        if (entries[0]?.isIntersecting && !isLoadingRef.current) {
+          isLoadingRef.current = true;
+          clearTimeout(timeoutRef.current);
+
+          timeoutRef.current = window.setTimeout(() => {
+            const potentialPromise = callback();
+
+            if (
+              potentialPromise &&
+              typeof potentialPromise.then === "function"
+            ) {
+              potentialPromise.finally(() => {
+                isLoadingRef.current = false;
+              });
+            } else {
+              isLoadingRef.current = false;
+            }
+          }, 200);
         }
       },
-      { rootMargin: "200px" },
+      { rootMargin: "300px" },
     );
 
     const currentRef = sentinelRef.current;
@@ -83,11 +104,14 @@ function useInfiniteScroll(callback?: () => void, hasMore?: boolean) {
       observer.observe(currentRef);
     }
 
+    // Cleanup function
     return () => {
       if (currentRef) {
         observer.unobserve(currentRef);
       }
       observer.disconnect();
+      clearTimeout(timeoutRef.current);
+      isLoadingRef.current = false;
     };
   }, [callback, hasMore]);
 
@@ -110,6 +134,8 @@ const columnStyles = css`
 
 const itemStyles = css`
   break-inside: avoid;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 18rem;
 
   img {
     display: block;
@@ -136,25 +162,18 @@ const itemStyles = css`
 function distributePhotosGreedy(
   photos: PexelsPhoto[],
   columnCount: number,
-): PexelsPhoto[][] {
-  // Create array of column arrays with their total height
-  const columnHeights = Array(columnCount).fill(0);
-  const columns = Array.from(
-    { length: columnCount },
-    () => [] as PexelsPhoto[],
-  );
+  columnWidth: number,
+  gap: number,
+) {
+  const columnHeights = Array(columnCount).fill(gap); // Account for first gap
+  const columns = Array.from({ length: columnCount }, () => []);
 
-  // Greedy distribution
   photos.forEach((photo) => {
-    // Find column with smallest current height
-    const shortestColumnIndex = columnHeights.reduce(
-      (minIndex, height, index) =>
-        height < columnHeights[minIndex] ? index : minIndex,
-      0,
-    );
+    const shortestIndex = columnHeights.indexOf(Math.min(...columnHeights));
+    const renderedHeight = columnWidth / (photo.width / photo.height) + gap;
 
-    columns[shortestColumnIndex].push(photo);
-    columnHeights[shortestColumnIndex] += photo.height;
+    (columns[shortestIndex] as PexelsPhoto[]).push(photo);
+    columnHeights[shortestIndex] += renderedHeight;
   });
 
   return columns;
@@ -165,20 +184,24 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
   const columnCount = useResponsiveColumns(
     containerRef as React.RefObject<HTMLDivElement>,
   );
+
   const sentinelRef = useInfiniteScroll(loadMore, hasMore);
 
   // Distribute photos into columns
-  const columns = useMemo(
-    () => distributePhotosGreedy(photos, columnCount),
-    [photos, columnCount],
-  );
+  const columns = useMemo(() => {
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    const gap = 16; // 1rem in pixels
+    const columnWidth =
+      (containerWidth - gap * (columnCount - 1)) / columnCount;
+    return distributePhotosGreedy(photos, columnCount, columnWidth, gap);
+  }, [photos, columnCount]);
 
   return (
     <>
       <div css={getGridContainerStyles(columnCount)} ref={containerRef}>
         {columns.map((columnPhotos, columnIndex) => (
           <div key={columnIndex} css={columnStyles}>
-            {columnPhotos.map((photo, index) => {
+            {(columnPhotos as PexelsPhoto[]).map((photo, index) => {
               const isSuperPriorityImage = index === 0; // First image in each column
               const isPriorityImage = index < 2; // First 2 images in each column
               const aspectRatio = photo.width / photo.height;
