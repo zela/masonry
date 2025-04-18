@@ -61,37 +61,3 @@ export function useInfiniteScroll(
 
   return sentinelRef;
 }
-
-/**
- * Basic version without the loading flag
- */
-export function useInfiniteScroll0(callback?: () => void, hasMore?: boolean) {
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!callback || !hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          callback();
-        }
-      },
-      { rootMargin: "400px" },
-    );
-
-    const currentRef = sentinelRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-      observer.disconnect();
-    };
-  }, [callback, hasMore]);
-
-  return sentinelRef;
-}
