@@ -6,6 +6,7 @@ export default defineWorkspace([
   {
     extends: "vite.config.ts",
     test: {
+      globals: true,
       browser: {
         enabled: true,
         provider: "preview",
