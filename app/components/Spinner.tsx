@@ -8,6 +8,14 @@ const spin = keyframes`
   100% { transform: rotate(360deg); }
 `;
 
+const fullPageStyles = css`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+`;
+
 const spinnerStyles = css`
   display: inline-block;
   width: 40px;
@@ -18,7 +26,7 @@ const spinnerStyles = css`
   animation: ${spin} 1s linear infinite;
 `;
 
-export function DelayedSpinner({ delay = 1000 }) {
+export function DelayedSpinner({ delay = 1000, fullPage = false }) {
   const [showSpinner, setShowSpinner] = useState(false);
 
   useEffect(() => {
@@ -31,6 +39,14 @@ export function DelayedSpinner({ delay = 1000 }) {
 
   if (!showSpinner) {
     return null;
+  }
+
+  if (fullPage) {
+    return (
+      <div css={fullPageStyles}>
+        <div css={spinnerStyles} />
+      </div>
+    );
   }
 
   return <div css={spinnerStyles} />;

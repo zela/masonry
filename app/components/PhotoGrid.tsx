@@ -3,6 +3,7 @@
 import { css } from "@emotion/react";
 import type { PexelsPhoto } from "~/api/pexels";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { Link } from "react-router";
 
 interface PhotoGridProps {
   photos: PexelsPhoto[];
@@ -189,24 +190,26 @@ export function PhotoGrid({ photos, loadMore, hasMore }: PhotoGridProps) {
               ];
 
               return (
-                <div key={photo.id} css={itemStyles}>
-                  <img
-                    src={photo.src.medium}
-                    srcSet={
-                      `${photo.src.medium} ${sizes[1]}, ` +
-                      `${photo.src.large} ${sizes[0]}`
-                    }
-                    sizes={`(max-width: 90rem) calc((100vw - 1rem * ${columnCount - 1}) / ${columnCount}), ${maxColWidth}px`}
-                    alt={photo.alt || `Photo by ${photo.photographer}`}
-                    fetchPriority={isSuperPriorityImage ? "high" : "auto"}
-                    loading={isPriorityImage ? "eager" : "lazy"}
-                    width={photo.width}
-                    height={photo.height}
-                    style={{
-                      aspectRatio: aspectRatio,
-                    }}
-                  />
-                </div>
+                <Link key={photo.id} to={`/photos/${photo.id}`}>
+                  <div css={itemStyles}>
+                    <img
+                      src={photo.src.medium}
+                      srcSet={
+                        `${photo.src.medium} ${sizes[1]}, ` +
+                        `${photo.src.large} ${sizes[0]}`
+                      }
+                      sizes={`(max-width: 90rem) calc((100vw - 1rem * ${columnCount - 1}) / ${columnCount}), ${maxColWidth}px`}
+                      alt={photo.alt || `Photo by ${photo.photographer}`}
+                      fetchPriority={isSuperPriorityImage ? "high" : "auto"}
+                      loading={isPriorityImage ? "eager" : "lazy"}
+                      width={photo.width}
+                      height={photo.height}
+                      style={{
+                        aspectRatio: aspectRatio,
+                      }}
+                    />
+                  </div>
+                </Link>
               );
             })}
           </div>

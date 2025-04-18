@@ -50,6 +50,15 @@ async function fetchLocalPhotos(): Promise<PexelsResponse> {
 }
 
 /**
+ * Fetch photo from the dev server
+ * @returns {Promise<PexelsResponse>}
+ */
+async function fetchLocalPhotoById(): Promise<PexelsPhoto> {
+  const response = await fetch("/pexels_response_image.json");
+  return response.json();
+}
+
+/**
  * Fetch photos from Pexels API
  * @param {number} [page=1] - Page number
  * @param {number} [perPage=80] - Number of photos per page
@@ -59,11 +68,8 @@ async function fetchLocalPhotos(): Promise<PexelsResponse> {
 async function fetchPhotosFromPexels(
   page = 1,
   perPage = 80,
-  query?: string,
 ): Promise<PexelsResponse> {
-  const endpoint = query
-    ? `${PEXELS_BASE_URL}/search?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`
-    : `${PEXELS_BASE_URL}/curated?page=${page}&per_page=${perPage}`;
+  const endpoint = `${PEXELS_BASE_URL}/curated?page=${page}&per_page=${perPage}`;
 
   const response = await fetch(endpoint, {
     headers: {
@@ -85,18 +91,16 @@ async function fetchPhotosFromPexels(
  * In development mode, arguments are ignored for simplicity.
  * @param {number} [page=1] - Page number
  * @param {number} [perPage=80] - Number of photos per page
- * @param {string} [query] - Search query
  * @returns {Promise<PexelsResponse>} A promise that resolves to the Pexels API response
  */
 export async function fetchPhotos(
   page = 1,
   perPage = 80,
-  query?: string,
 ): Promise<PexelsResponse> {
   if (import.meta.env.DEV) {
     return fetchLocalPhotos();
   }
-  return fetchPhotosFromPexels(page, perPage, query);
+  return fetchPhotosFromPexels(page, perPage);
 }
 
 /**
@@ -105,7 +109,7 @@ export async function fetchPhotos(
  * @returns {Promise<PexelsPhoto>} A promise that resolves to the photo object
  * @throws {Error} When the API request fails or returns a non-200 status code
  */
-export async function fetchPhotoById(id: number): Promise<PexelsPhoto> {
+async function fetchPhotoByIdFromPexels(id: number): Promise<PexelsPhoto> {
   const endpoint = `${PEXELS_BASE_URL}/photos/${id}`;
 
   const response = await fetch(endpoint, {
@@ -116,9 +120,16 @@ export async function fetchPhotoById(id: number): Promise<PexelsPhoto> {
 
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch photo: ${response.status} ${response.statusText}`
+      `Failed to fetch photo: ${response.status} ${response.statusText}`,
     );
   }
 
   return response.json();
+}
+
+export async function fetchPhotoById(id: number): Promise<PexelsPhoto> {
+  if (import.meta.env.DEV) {
+    return fetchLocalPhotoById();
+  }
+  return fetchPhotoByIdFromPexels(id);
 }

@@ -7,19 +7,13 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "format": "prettier --write .",
-    "lint": "eslint --fix .",
+    "lint": "eslint --fix ./app",
     "prepare": "husky",
-    "start": "react-router-serve ./build/server/index.js",
+    "preview": "vite preview",
     "test": "vitest",
     "test:browser": "vitest --workspace=vitest.workspace.ts --browser.headless",
     "typecheck": "react-router typegen && tsc",
     "visualize": "vite-bundle-visualizer"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --quiet --fix"
-    ],
-    "**/*.{json,js,ts,jsx,tsx,html}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

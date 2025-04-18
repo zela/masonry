@@ -1,1 +1,2 @@
-git-format-staged -f 'prettier --ignore-unknown --stdin --stdin-filepath "{}"' '**/*.{json,js,ts,jsx,tsx,html}'
+git-format-staged --no-write -f 'eslint --stdin --stdin-filename "{}" >&2' 'app/*.ts' 'app/*.tsx'
+git-format-staged -f 'prettier --ignore-unknown --stdin-filepath "{}"' 'app/*.ts' 'app/*.tsx'
