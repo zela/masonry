@@ -169,3 +169,16 @@ The discussion of the audit of the Grid Page is similar, and I'm leaving it for 
 - Improve accessibility features
 - Implement server-side rendering for better SEO and performance
 - Add search functionality
+
+## Rejection points
+- The virtualization is not implemented
+    _Lazy loading with pagination were considered reasonable for the application. Virtualization practically would matter for hundreds of images on the page (1000+ images @ 300KB each = 300MB memory), which is the case if users scroll > 100 pages._
+    _I've tried to demonstrate understanding of the users' needs, awareness of the variety optimization techniques, their cost of implementation and maintainance and the ability to choose the best solution for the task._
+- The infinite scroll is not working smoothly
+    _The simple implementation was considered enough to demonstrate the concept. Improved._
+- The masonry algorithm does not take into account the heights of items, so it can at the end that one column has longer height than the others
+    _It actually does take into account the heights of items, but there was a bug in the calculation. Fixed._
+- There are multiple files with more than one entries
+    _One file contains utilities, which colocated by the purpose. Other files with multiple entries are required by the framework._
+- Some of the components include also multiple reusable hooks
+    _Hooks are reusable if they are used in multiple components. Since they are used once, they are colocated with the corresponding components._
