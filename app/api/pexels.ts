@@ -87,23 +87,6 @@ async function fetchPhotosFromPexels(
 }
 
 /**
- * Fetch photos, either from the dev server or Pexels API.
- * In development mode, arguments are ignored for simplicity.
- * @param {number} [page=1] - Page number
- * @param {number} [perPage=80] - Number of photos per page
- * @returns {Promise<PexelsResponse>} A promise that resolves to the Pexels API response
- */
-export async function fetchPhotos(
-  page = 1,
-  perPage = 80,
-): Promise<PexelsResponse> {
-  if (import.meta.env.DEV) {
-    return fetchLocalPhotos();
-  }
-  return fetchPhotosFromPexels(page, perPage);
-}
-
-/**
  * Fetch a single photo from Pexels API by its ID
  * @param {number} id - The unique identifier of the photo to fetch
  * @returns {Promise<PexelsPhoto>} A promise that resolves to the photo object
@@ -125,6 +108,23 @@ async function fetchPhotoByIdFromPexels(id: number): Promise<PexelsPhoto> {
   }
 
   return response.json();
+}
+
+/**
+ * Fetch photos, either from the dev server or Pexels API.
+ * In development mode, arguments are ignored for simplicity.
+ * @param {number} [page=1] - Page number
+ * @param {number} [perPage=80] - Number of photos per page
+ * @returns {Promise<PexelsResponse>} A promise that resolves to the Pexels API response
+ */
+export async function fetchPhotos(
+  page = 1,
+  perPage = 80,
+): Promise<PexelsResponse> {
+  if (import.meta.env.DEV) {
+    return fetchLocalPhotos();
+  }
+  return fetchPhotosFromPexels(page, perPage);
 }
 
 export async function fetchPhotoById(id: number): Promise<PexelsPhoto> {
