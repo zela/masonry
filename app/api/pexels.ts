@@ -103,6 +103,25 @@ export async function fetchPhotosFromList(
 }
 
 /**
+ * Fetch a single photo from a predefined list stored on the server.
+ * Uses local data instead of making Pexels API calls.
+ * @param {number} id - The unique identifier of the photo to fetch
+ * @returns {Promise<PexelsPhoto>} A promise that resolves to the photo object
+ * @throws {Error} When the photo with the given ID is not found
+ */
+export async function fetchPhotoByIdFromList(id: number): Promise<PexelsPhoto> {
+  const response = await fetch("/photo_set.json");
+  const photos: PexelsPhoto[] = await response.json();
+
+  const photo = photos.find((p) => p.id === id);
+  if (!photo) {
+    throw new Error(`Photo with ID ${id} not found`);
+  }
+
+  return photo;
+}
+
+/**
  * Fetch photos from Pexels API
  * @param {number} [page=1] - Page number
  * @param {number} [perPage=80] - Number of photos per page
@@ -176,8 +195,13 @@ export async function fetchPhotos(
 }
 
 export async function fetchPhotoById(id: number): Promise<PexelsPhoto> {
-  if (import.meta.env.DEV) {
+  if (import.meta.env.VITE_BASIC_LOAD) {
     return fetchLocalPhotoById();
   }
+
+  if (!import.meta.env.VITE_PEXELS_API_KEY || import.meta.env.DEV) {
+    return fetchPhotoByIdFromList(id);
+  }
+
   return fetchPhotoByIdFromPexels(id);
 }
