@@ -1,6 +1,6 @@
 /** @jsxImportSource @emotion/react */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { css } from "@emotion/react";
 import { Link } from "react-router";
@@ -46,20 +46,25 @@ export default function PhotoDetailPage() {
   const [photo, setPhoto] = useState<PexelsPhoto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
 
   const loadPhoto = useCallback(async () => {
+    if (loadingRef.current) return;
     if (!id) return;
 
     try {
+      loadingRef.current = true;
       setIsLoading(true);
       setError(null);
 
       const photoData = await fetchPhotoById(parseInt(id, 10));
+
       setPhoto(photoData);
     } catch (err) {
       console.error("Error loading photo:", err);
       setError("Failed to load photo. Please try again later.");
     } finally {
+      loadingRef.current = false;
       setIsLoading(false);
     }
   }, [id]);
