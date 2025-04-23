@@ -59,6 +59,50 @@ async function fetchLocalPhotoById(): Promise<PexelsPhoto> {
 }
 
 /**
+ * Fetch photos from a predefined list stored on the server.
+ * Uses local data instead of making Pexels API calls.
+ * Implements pagination by slicing the stored list.
+ * When `page * perPage` exceeds list length, wraps back to start.
+ * @param {number} [page=1] - Page number
+ * @param {number} [perPage=80] - Number of photos per page
+ */
+export async function fetchPhotosFromList(
+  page = 1,
+  perPage = 80,
+): Promise<PexelsResponse> {
+  // Fetch the stored photo list with unique photos
+  const response = await fetch("/photo_set.json");
+  const photos: PexelsPhoto[] = await response.json();
+
+  // Calculate start and end indices for pagination
+  const startIndex = ((page - 1) * perPage) % photos.length;
+  const endIndex = Math.min(startIndex + perPage, photos.length);
+
+  // If we need to wrap around to the beginning of the list
+  if (endIndex - startIndex < perPage) {
+    const remainingCount = perPage - (endIndex - startIndex);
+    return {
+      page,
+      per_page: perPage,
+      next_page: `${page + 1}`,
+      photos: [
+        ...photos.slice(startIndex, endIndex),
+        ...photos.slice(0, remainingCount),
+      ],
+      total_results: photos.length,
+    };
+  }
+
+  return {
+    page,
+    per_page: perPage,
+    next_page: `${page + 1}`,
+    photos: photos.slice(startIndex, endIndex),
+    total_results: photos.length,
+  };
+}
+
+/**
  * Fetch photos from Pexels API
  * @param {number} [page=1] - Page number
  * @param {number} [perPage=80] - Number of photos per page
@@ -112,7 +156,6 @@ async function fetchPhotoByIdFromPexels(id: number): Promise<PexelsPhoto> {
 
 /**
  * Fetch photos, either from the dev server or Pexels API.
- * In development mode, arguments are ignored for simplicity.
  * @param {number} [page=1] - Page number
  * @param {number} [perPage=80] - Number of photos per page
  * @returns {Promise<PexelsResponse>} A promise that resolves to the Pexels API response
@@ -121,9 +164,14 @@ export async function fetchPhotos(
   page = 1,
   perPage = 80,
 ): Promise<PexelsResponse> {
-  if (import.meta.env.DEV) {
+  if (import.meta.env.VITE_BASIC_LOAD) {
     return fetchLocalPhotos();
   }
+
+  if (!import.meta.env.VITE_PEXELS_API_KEY || import.meta.env.DEV) {
+    return fetchPhotosFromList(page, perPage);
+  }
+
   return fetchPhotosFromPexels(page, perPage);
 }
 
